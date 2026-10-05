@@ -1,69 +1,279 @@
-import Image from "next/image";
+
+"use client";
+
+import { useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import "katex/dist/katex.min.css";
+
+
 
 export default function Home() {
-  return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+const [mode, setMode] = useState<"home" | "academic" | "language">("home");
+const [question, setQuestion] = useState("");
+const [answer, setAnswer] = useState("");
+const [loading, setLoading] = useState(false);
+
+async function solveQuestion() {
+if (!question.trim()) {
+return;
+}
+
+setLoading(true);
+setAnswer("");
+
+try {
+  const response = await fetch("/api/ask", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      question: question,
+    }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    setAnswer(data.error || "Something went wrong.");
+    return;
+  }
+
+  setAnswer(data.answer);
+} catch (error) {
+  console.error(error);
+  setAnswer("Could not connect to the AI.");
+} finally {
+  setLoading(false);
+}
+
+
+}
+
+if (mode === "academic") {
+return ( <main className="page"> <nav className="navbar">
+<button className="logo" onClick={() => setMode("home")}>
+🎓 AI Study Hub </button>
+
+```
+      <button className="navButton" onClick={() => setMode("home")}>
+        Home
+      </button>
+    </nav>
+
+    <section className="workspace">
+      <div className="sectionHeader">
+        <p className="eyebrow">AI LEARNING ASSISTANT</p>
+
+        <h1>📚 Academic Solver</h1>
+
+        <p>
+          Ask questions from mathematics, physics, engineering,
+          programming and other subjects.
+        </p>
+      </div>
+
+      <div className="solverCard">
+        <textarea
+          className="questionBox"
+          placeholder="Type your question here..."
+          value={question}
+          onChange={(e) => setQuestion(e.target.value)}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+
+        <div className="uploadBox">
+          <span>🖼️</span>
+
+          <div>
+            <strong>Upload a question image</strong>
+            <p>PNG, JPG, JPEG or WEBP</p>
+          </div>
+
+          <input type="file" accept="image/*" />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <button
+          className="primaryButton"
+          onClick={solveQuestion}
+          disabled={loading}
+        >
+          {loading ? "⏳ Solving..." : "✨ Solve Question"}
+        </button>
+
+      
+        {answer && (
+          <div className="answerBox">
+            <h2>Answer</h2>
+
+            <ReactMarkdown
+              remarkPlugins={[remarkMath]}
+              rehypePlugins={[rehypeKatex]}
+            >
+              {answer}
+            </ReactMarkdown>
+          </div>
+        )}
+      </div>
+    </section>
+  </main>
+);
+
+
+}
+
+if (mode === "language") {
+return ( <main className="page"> <nav className="navbar">
+<button className="logo" onClick={() => setMode("home")}>
+🎓 AI Study Hub </button>
+
+```
+      <button className="navButton" onClick={() => setMode("home")}>
+        Home
+      </button>
+    </nav>
+
+    <section className="workspace">
+      <div className="sectionHeader">
+        <p className="eyebrow">LANGUAGE LEARNING ASSISTANT</p>
+
+        <h1>🌍 Low-Resource Language Tutor</h1>
+
+        <p>
+          Learn vocabulary, grammar, pronunciation and conversation
+          with an AI tutor.
+        </p>
+      </div>
+
+      <div className="solverCard">
+        <div className="selectRow">
+          <select className="selectBox">
+            <option>Tamil</option>
+            <option>Marathi</option>
+            <option>Telugu</option>
+            <option>Hindi</option>
+            <option>Kannada</option>
+            <option>Bengali</option>
+            <option>Other</option>
+          </select>
+
+          <select className="selectBox">
+            <option>Beginner</option>
+            <option>Elementary</option>
+            <option>Intermediate</option>
+            <option>Advanced</option>
+          </select>
         </div>
-      </main>
+
+        <div className="modeButtons">
+          <button className="modeButton">📖 Learn</button>
+          <button className="modeButton">✍️ Practice</button>
+          <button className="modeButton">💬 Conversation</button>
+          <button className="modeButton">🧠 Quiz</button>
+        </div>
+
+        <textarea
+          className="questionBox"
+          placeholder="What would you like to learn?"
+        />
+
+        <div className="uploadBox">
+          <span>🖼️</span>
+
+          <div>
+            <strong>Upload an image</strong>
+            <p>Translate or understand text from an image</p>
+          </div>
+
+          <input type="file" accept="image/*" />
+        </div>
+
+        <button className="primaryButton">
+          ✨ Start Learning
+        </button>
+      </div>
+    </section>
+  </main>
+);
+
+
+}
+
+return ( <main className="page"> <nav className="navbar">
+<button className="logo" onClick={() => setMode("home")}>
+🎓 AI Study Hub </button>
+
+```
+    <div className="navLinks">
+      <button onClick={() => setMode("academic")}>
+        Academic Solver
+      </button>
+
+      <button onClick={() => setMode("language")}>
+        Language Tutor
+      </button>
     </div>
-  );
+  </nav>
+
+  <section className="hero">
+    <div className="heroContent">
+      <p className="eyebrow">AI-POWERED LEARNING</p>
+
+      <h1>
+        Learn smarter with
+        <span> AI Study Hub</span>
+      </h1>
+
+      <p className="heroText">
+        Your personal AI learning assistant for academic problem solving
+        and learning low-resource languages.
+      </p>
+    </div>
+
+    <div className="featureGrid">
+      <button
+        className="featureCard"
+        onClick={() => setMode("academic")}
+      >
+        <div className="icon">📚</div>
+
+        <h2>Academic Solver</h2>
+
+        <p>
+          Solve and understand questions from mathematics, physics,
+          engineering and computer science.
+        </p>
+
+        <span className="cardLink">
+          Start solving →
+        </span>
+      </button>
+
+      <button
+        className="featureCard"
+        onClick={() => setMode("language")}
+      >
+        <div className="icon">🌍</div>
+
+        <h2>Low-Resource Language Tutor</h2>
+
+        <p>
+          Learn languages progressively through vocabulary, practice,
+          conversation and quizzes.
+        </p>
+
+        <span className="cardLink">
+          Start learning →
+        </span>
+      </button>
+    </div>
+  </section>
+
+  <footer>
+    <p>AI Study Hub • Built for smarter learning</p>
+  </footer>
+</main>
+
+);
 }
