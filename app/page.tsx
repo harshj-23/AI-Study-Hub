@@ -138,7 +138,7 @@ return ( <main className="page"> <nav className="navbar">
       <div className="sectionHeader">
         <p className="eyebrow">LANGUAGE LEARNING ASSISTANT</p>
 
-        <h1>🌍 Low-Resource Language Tutor</h1>
+        <h1>🌍 Language Tutor</h1>
 
         <p>
           Learn vocabulary, grammar, pronunciation and conversation
@@ -256,7 +256,7 @@ return ( <main className="page"> <nav className="navbar">
       >
         <div className="icon">🌍</div>
 
-        <h2>Low-Resource Language Tutor</h2>
+        <h2>Language Tutor</h2>
 
         <p>
           Learn languages progressively through vocabulary, practice,
