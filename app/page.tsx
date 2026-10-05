@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -7,273 +6,438 @@ import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
 
-
-
 export default function Home() {
-const [mode, setMode] = useState<"home" | "academic" | "language">("home");
-const [question, setQuestion] = useState("");
-const [answer, setAnswer] = useState("");
-const [loading, setLoading] = useState(false);
+  const [mode, setMode] = useState<"home" | "academic" | "language">("home");
 
-async function solveQuestion() {
-if (!question.trim()) {
-return;
-}
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
-setLoading(true);
-setAnswer("");
+  const [question, setQuestion] = useState("");
+  const [language, setLanguage] = useState("Tamil");
+  const [level, setLevel] = useState("Beginner");
+  const [languageMode, setLanguageMode] = useState("Learn");
 
-try {
-  const response = await fetch("/api/ask", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      question: question,
-    }),
-  });
+  const [answer, setAnswer] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const data = await response.json();
+  async function solveQuestion() {
+    if (!question.trim()) {
+      return;
+    }
 
-  if (!response.ok) {
-    setAnswer(data.error || "Something went wrong.");
-    return;
+    setLoading(true);
+    setAnswer("");
+
+    try {
+      const response = await fetch("/api/ask", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          question,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setAnswer(data.error || "Something went wrong.");
+        return;
+      }
+
+      setAnswer(data.answer);
+    } catch (error) {
+      console.error(error);
+      setAnswer("Could not connect to the AI.");
+    } finally {
+      setLoading(false);
+    }
   }
 
-  setAnswer(data.answer);
-} catch (error) {
-  console.error(error);
-  setAnswer("Could not connect to the AI.");
-} finally {
-  setLoading(false);
-}
+  async function startLearning() {
+    if (!question.trim()) {
+      return;
+    }
 
+    setLoading(true);
+    setAnswer("");
 
-}
+    try {
+      const response = await fetch("/api/language", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          language,
+          level,
+          mode: languageMode,
+          question,
+        }),
+      });
 
-if (mode === "academic") {
-return ( <main className="page"> <nav className="navbar">
-<button className="logo" onClick={() => setMode("home")}>
-🎓 AI Study Hub </button>
+      const data = await response.json();
 
-```
-      <button className="navButton" onClick={() => setMode("home")}>
-        Home
-      </button>
-    </nav>
+      if (!response.ok) {
+        setAnswer(data.error || "Something went wrong.");
+        return;
+      }
 
-    <section className="workspace">
-      <div className="sectionHeader">
-        <p className="eyebrow">AI LEARNING ASSISTANT</p>
+      setAnswer(data.answer);
+    } catch (error) {
+      console.error(error);
+      setAnswer("Could not connect to the language tutor.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
-        <h1>📚 Academic Solver</h1>
+  function goToMode(newMode: "home" | "academic" | "language") {
+    setMode(newMode);
+    setQuestion("");
+    setAnswer("");
+  }
 
-        <p>
-          Ask questions from mathematics, physics, engineering,
-          programming and other subjects.
-        </p>
-      </div>
+  return (
+    <main className="appShell">
+      {/* SIDEBAR */}
 
-      <div className="solverCard">
-        <textarea
-          className="questionBox"
-          placeholder="Type your question here..."
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-        />
-
-        <div className="uploadBox">
-          <span>🖼️</span>
-
-          <div>
-            <strong>Upload a question image</strong>
-            <p>PNG, JPG, JPEG or WEBP</p>
-          </div>
-
-          <input type="file" accept="image/*" />
-        </div>
+      <aside className={`sidebar ${sidebarOpen ? "open" : "collapsed"}`}>
+        <div className="sidebarTop">
+        <button
+          className="brand"
+          onClick={() => goToMode("home")}
+          title="GyaanSetu"
+        >
+          <span className="brandIcon">🎓</span>
+          {sidebarOpen && (
+            <span className="brandText">GyaanSetu</span>
+          )}
+        </button>
 
         <button
-          className="primaryButton"
-          onClick={solveQuestion}
-          disabled={loading}
+          className="collapseButton"
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          title={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
         >
-          {loading ? "⏳ Solving..." : "✨ Solve Question"}
+          {sidebarOpen ? "Collapse <" : ">"}
         </button>
+        </div>
 
-      
-        {answer && (
-          <div className="answerBox">
-            <h2>Answer</h2>
+        <div className="sidebarNav">
+          <button
+            className={`sidebarButton ${
+              mode === "home" ? "active" : ""
+            }`}
+            onClick={() => goToMode("home")}
+            title="Home"
+          >
+            <span className="sidebarIcon">🏠</span>
 
-            <ReactMarkdown
-              remarkPlugins={[remarkMath]}
-              rehypePlugins={[rehypeKatex]}
-            >
-              {answer}
-            </ReactMarkdown>
-          </div>
+            {sidebarOpen && <span>Home</span>}
+          </button>
+
+          <button
+            className={`sidebarButton ${
+              mode === "academic" ? "active" : ""
+            }`}
+            onClick={() => goToMode("academic")}
+            title="Academic Tutor"
+          >
+            <span className="sidebarIcon">📚</span>
+
+            {sidebarOpen && <span>Academic</span>}
+          </button>
+
+          <button
+            className={`sidebarButton ${
+              mode === "language" ? "active" : ""
+            }`}
+            onClick={() => goToMode("language")}
+            title="Language Tutor"
+          >
+            <span className="sidebarIcon">🌍</span>
+
+            {sidebarOpen && <span>Language</span>}
+          </button>
+        </div>
+
+        <div className="sidebarBottom">
+          {sidebarOpen && (
+            <p>GyaanSetu</p>
+          )}
+        </div>
+      </aside>
+
+      {/* MAIN CONTENT */}
+
+      <section className="mainContent">
+
+        {/* HOME */}
+
+        {mode === "home" && (
+          <section className="homePage">
+            <div className="homeContent">
+              <p className="eyebrow">AI-POWERED LEARNING</p>
+
+              <h1>
+                Learn smarter with
+                <span> GyaanSetu</span>
+              </h1>
+
+              <p className="heroText">
+                Your personal AI learning assistant for academic
+                problem solving and language learning.
+              </p>
+
+              <div className="featureGrid">
+                <button
+                  className="featureCard"
+                  onClick={() => goToMode("academic")}
+                >
+                  <div className="icon">📚</div>
+
+                  <h2>Academic Tutor</h2>
+
+                  <p>
+                    Solve and understand questions from mathematics,
+                    physics, engineering and computer science.
+                  </p>
+
+                  <span className="cardLink">
+                    Start solving →
+                  </span>
+                </button>
+
+                <button
+                  className="featureCard"
+                  onClick={() => goToMode("language")}
+                >
+                  <div className="icon">🌍</div>
+
+                  <h2>Language Tutor</h2>
+
+                  <p>
+                    Learn languages through vocabulary, practice,
+                    conversation and quizzes.
+                  </p>
+
+                  <span className="cardLink">
+                    Start learning →
+                  </span>
+                </button>
+              </div>
+            </div>
+          </section>
         )}
-      </div>
-    </section>
-  </main>
-);
 
+        {/* ACADEMIC TUTOR */}
 
-}
+        {mode === "academic" && (
+          <section className="chatPage">
+            <div className="chatHeader">
+              <div>
+                <p className="eyebrow">ACADEMIC LEARNING</p>
 
-if (mode === "language") {
-return ( <main className="page"> <nav className="navbar">
-<button className="logo" onClick={() => setMode("home")}>
-🎓 AI Study Hub </button>
+                <h1>📚 Academic Tutor</h1>
 
-```
-      <button className="navButton" onClick={() => setMode("home")}>
-        Home
-      </button>
-    </nav>
+                <p>
+                  Ask questions from mathematics, physics,
+                  engineering, programming and other subjects.
+                </p>
+              </div>
+            </div>
 
-    <section className="workspace">
-      <div className="sectionHeader">
-        <p className="eyebrow">LANGUAGE LEARNING ASSISTANT</p>
+            <div className="chatWorkspace">
+              {answer && (
+                <div className="answerBox">
+                  <h2>AI Tutor</h2>
 
-        <h1>🌍 Language Tutor</h1>
+                  <ReactMarkdown
+                    remarkPlugins={[remarkMath]}
+                    rehypePlugins={[rehypeKatex]}
+                  >
+                    {answer}
+                  </ReactMarkdown>
+                </div>
+              )}
 
-        <p>
-          Learn vocabulary, grammar, pronunciation and conversation
-          with an AI tutor.
-        </p>
-      </div>
+              <div className="inputArea">
+                <textarea
+                  className="questionBox"
+                  placeholder="Ask anything about your studies..."
+                  value={question}
+                  onChange={(e) => setQuestion(e.target.value)}
+                />
 
-      <div className="solverCard">
-        <div className="selectRow">
-          <select className="selectBox">
-            <option>Tamil</option>
-            <option>Marathi</option>
-            <option>Telugu</option>
-            <option>Hindi</option>
-            <option>Kannada</option>
-            <option>Bengali</option>
-            <option>Other</option>
-          </select>
+                <div className="inputBottom">
+                  <div className="uploadBox">
+                    <span>🖼️</span>
 
-          <select className="selectBox">
-            <option>Beginner</option>
-            <option>Elementary</option>
-            <option>Intermediate</option>
-            <option>Advanced</option>
-          </select>
-        </div>
+                    <div>
+                      <strong>Upload question</strong>
+                      <p>PNG, JPG, JPEG or WEBP</p>
+                    </div>
 
-        <div className="modeButtons">
-          <button className="modeButton">📖 Learn</button>
-          <button className="modeButton">✍️ Practice</button>
-          <button className="modeButton">💬 Conversation</button>
-          <button className="modeButton">🧠 Quiz</button>
-        </div>
+                    <input type="file" accept="image/*" />
+                  </div>
 
-        <textarea
-          className="questionBox"
-          placeholder="What would you like to learn?"
-        />
+                  <button
+                    className="primaryButton"
+                    onClick={solveQuestion}
+                    disabled={loading}
+                  >
+                    {loading ? "⏳ Solving..." : "✨ Solve"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
 
-        <div className="uploadBox">
-          <span>🖼️</span>
+        {/* LANGUAGE TUTOR */}
 
-          <div>
-            <strong>Upload an image</strong>
-            <p>Translate or understand text from an image</p>
-          </div>
+        {mode === "language" && (
+          <section className="chatPage">
+            <div className="chatHeader">
+              <div>
+                <p className="eyebrow">LANGUAGE LEARNING</p>
 
-          <input type="file" accept="image/*" />
-        </div>
+                <h1>🌍 Language Tutor</h1>
 
-        <button className="primaryButton">
-          ✨ Start Learning
-        </button>
-      </div>
-    </section>
-  </main>
-);
+                <p>
+                  Learn vocabulary, grammar, pronunciation and
+                  conversation with your AI tutor.
+                </p>
+              </div>
+            </div>
 
+            <div className="chatWorkspace">
+              {answer && (
+                <div className="answerBox">
+                  <h2>AI Tutor</h2>
 
-}
+                  <ReactMarkdown
+                    remarkPlugins={[remarkMath]}
+                    rehypePlugins={[rehypeKatex]}
+                  >
+                    {answer}
+                  </ReactMarkdown>
+                </div>
+              )}
 
-return ( <main className="page"> <nav className="navbar">
-<button className="logo" onClick={() => setMode("home")}>
-🎓 AI Study Hub </button>
+              <div className="inputArea">
+                <div className="selectRow">
+                  <select
+                    className="selectBox"
+                    value={language}
+                    onChange={(e) => setLanguage(e.target.value)}
+                  >
+                    <option>Tamil</option>
+                    <option>Marathi</option>
+                    <option>Telugu</option>
+                    <option>Hindi</option>
+                    <option>Kannada</option>
+                    <option>Bengali</option>
+                    <option>Other</option>
+                  </select>
 
-```
-    <div className="navLinks">
-      <button onClick={() => setMode("academic")}>
-        Academic Solver
-      </button>
+                  <select
+                    className="selectBox"
+                    value={level}
+                    onChange={(e) => setLevel(e.target.value)}
+                  >
+                    <option>Beginner</option>
+                    <option>Elementary</option>
+                    <option>Intermediate</option>
+                    <option>Advanced</option>
+                  </select>
+                </div>
 
-      <button onClick={() => setMode("language")}>
-        Language Tutor
-      </button>
-    </div>
-  </nav>
+                <div className="modeButtons">
+                  <button
+                    className={
+                      languageMode === "Learn"
+                        ? "modeButton selected"
+                        : "modeButton"
+                    }
+                    onClick={() => setLanguageMode("Learn")}
+                  >
+                    📖 Learn
+                  </button>
 
-  <section className="hero">
-    <div className="heroContent">
-      <p className="eyebrow">AI-POWERED LEARNING</p>
+                  <button
+                    className={
+                      languageMode === "Practice"
+                        ? "modeButton selected"
+                        : "modeButton"
+                    }
+                    onClick={() => setLanguageMode("Practice")}
+                  >
+                    ✍️ Practice
+                  </button>
 
-      <h1>
-        Learn smarter with
-        <span> AI Study Hub</span>
-      </h1>
+                  <button
+                    className={
+                      languageMode === "Conversation"
+                        ? "modeButton selected"
+                        : "modeButton"
+                    }
+                    onClick={() =>
+                      setLanguageMode("Conversation")
+                    }
+                  >
+                    💬 Conversation
+                  </button>
 
-      <p className="heroText">
-        Your personal AI learning assistant for academic problem solving
-        and learning low-resource languages.
-      </p>
-    </div>
+                  <button
+                    className={
+                      languageMode === "Quiz"
+                        ? "modeButton selected"
+                        : "modeButton"
+                    }
+                    onClick={() => setLanguageMode("Quiz")}
+                  >
+                    🧠 Quiz
+                  </button>
+                </div>
 
-    <div className="featureGrid">
-      <button
-        className="featureCard"
-        onClick={() => setMode("academic")}
-      >
-        <div className="icon">📚</div>
+                <textarea
+                  className="questionBox"
+                  placeholder="What would you like to learn?"
+                  value={question}
+                  onChange={(e) => setQuestion(e.target.value)}
+                />
 
-        <h2>Academic Solver</h2>
+                <div className="inputBottom">
+                  <div className="uploadBox">
+                    <span>🖼️</span>
 
-        <p>
-          Solve and understand questions from mathematics, physics,
-          engineering and computer science.
-        </p>
+                    <div>
+                      <strong>Upload an image</strong>
+                      <p>
+                        Translate or understand text from an image
+                      </p>
+                    </div>
 
-        <span className="cardLink">
-          Start solving →
-        </span>
-      </button>
+                    <input type="file" accept="image/*" />
+                  </div>
 
-      <button
-        className="featureCard"
-        onClick={() => setMode("language")}
-      >
-        <div className="icon">🌍</div>
-
-        <h2>Language Tutor</h2>
-
-        <p>
-          Learn languages progressively through vocabulary, practice,
-          conversation and quizzes.
-        </p>
-
-        <span className="cardLink">
-          Start learning →
-        </span>
-      </button>
-    </div>
-  </section>
-
-  <footer>
-    <p>AI Study Hub • Built for smarter learning</p>
-  </footer>
-</main>
-
-);
+                  <button
+                    className="primaryButton"
+                    onClick={startLearning}
+                    disabled={loading}
+                  >
+                    {loading
+                      ? "⏳ Learning..."
+                      : "✨ Start Learning"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+      </section>
+    </main>
+  );
 }
